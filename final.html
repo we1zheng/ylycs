@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线答题系统</title>
+    <style>
+        /* 基础样式 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            
+            
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        /* 初始页面样式 */
+        .init-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* 水平居中 */
+            gap: 20px;
+        }
+
+        .init-btn {
+            padding: 40px;
+            font-size: 24px;
+            border: none;
+            border-radius: 10px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .init-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 答题页面样式 */
+        .quiz-page {
+            display: none;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .question-view {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .question-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .submit-btn,
+        .reset-btn,
+        .back-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .back-btn {
+            background-color: #f0f0f0;
+        }
+
+        .submit-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* 结果页面样式 */
+        .result-container {
+            padding: 20px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-display {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .wrong-answers {
+            margin-top: 20px;
+        }
+
+        .wrong-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .wrong-item p {
+            margin: 5px 0;
+        }
+
+        .option {
+            padding: 5px;
+            margin: 3px 0;
+        }
+
+        .correct-option {
+            color: green;
+            font-weight: bold;
+        }
+
+        .wrong-option {
+            color: red;
+            font-weight: bold;
+        }
+
+        .quiz-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .reset-btn {
+            background-color: #e80c0c;
+            color: white;
+        }
+
+        /* 新增说明文字样式 */
+        .description {
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+            /* text-align: center; */
+            text-align: left; /* 确保内容左对齐 */
+      font-family: Arial, sans-serif; /* 可选：设置字体 */
+      line-height: 1.5; /* 可选：设置行高 */
+        }
+
+        .clear-cache-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* 新增结果页面返回按钮样式 */
+        .result-back-btn {
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+        }
+         /* 新增结果页面返回按钮样式 */
+    .result-back-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 初始页面 -->
+        <div class="init-page">
+            <button class="init-btn" data-category="dataType">数据类型</button>
+            <button class="init-btn" data-category="operator">运算符</button>
+            <button class="init-btn" data-category="inputOutput">输入输出</button>
+            <button class="init-btn" data-category="comprehensive">综合</button>
+            <button class="clear-cache-btn">清除答题缓存</button>
+            <div class="description">
+                1、初次进入请点击清除答题缓存；<br>
+                2、答题结束后，点击返回按钮返回答题页面；<br>
+                3、点击重新作答按钮，重新作答当前题目；<br>
+                4、点击提交按钮，提交答案并查看结果。
+            </div>
+          </div>
+          
+        <!-- 答题页面 -->
+        <div class="quiz-page">
+            <div class="quiz-title" id="quizTitle"></div>
+            <div id="questionArea" class="question-view"></div>
+            <div class="button-group">
+              <button class="back-btn" id="backBtn">返回</button>
+              <button class="reset-btn" id="resetBtn">重新作答</button>
+              <button class="submit-btn" id="submitBtn">提交</button>
+            </div>
+          </div>
+        </div>
+        
+    <script>
+        const questionBank = {
+            dataType: [
+                {
+                    question: "以下哪个是JavaScript的基本数据类型？",
+                    options: ["A. 数组", "B. 字符串", "C. 对象", "D. 函数"],
+                    answer: "B"
+                },
+                {
+                    question: "typeof null 的返回值是什么？",
+                    options: ["A. null", "B. object", "C. undefined", "D. string"],
+                    answer: "B"
+                }
+                // ... 其他题目
+            ],
+            operator: [
+                {
+                    question: "以下哪个是逻辑运算符？",
+                    options: ["A. +", "B. &&", "C. ==", "D. !"],
+                    answer: "B"
+                }
+                // ... 其他题目
+            ],
+            inputOutput: [
+                {
+                    question: "以下哪个方法可以弹出输入框？",
+                    options: ["A. alert()", "B. confirm()", "C. prompt()", "D. console.log()"],
+                    answer: "C"
+                }
+                // ... 其他题目
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const initPage = document.querySelector('.init-page');
+            const quizPage = document.querySelector('.quiz-page');
+            const initButtons = document.querySelectorAll('.init-btn');
+            const navButtons = document.querySelectorAll('.nav-btn');
+            const questionArea = document.getElementById('questionArea');
+            const submitBtn = document.getElementById('submitBtn');
+            const backBtn = document.getElementById('backBtn');
+            let currentCategory = 'dataType';
+            let currentQuestions = [];
+
+            // 初始化按钮点击事件
+            initButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentCategory = btn.dataset.category;
+                    initPage.style.display = 'none';
+                    quizPage.style.display = 'block';
+                    document.getElementById('quizTitle').textContent = `当前答题类型：${getCategoryName(currentCategory)}`;
+                    loadQuestions(currentCategory);
+                    loadProgress(); // 加载进度
+                });
+            });
+
+            // 清除缓存按钮
+            document.querySelector('.clear-cache-btn').addEventListener('click', () => {
+                if (confirm('确定要清除全部答题缓存吗？')) {
+                    localStorage.clear();
+                    alert('答题缓存已清除');
+                }
+            });
+
+            // 重新作答按钮
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                if (confirm('确定要重新作答吗？当前选择将会被清除')) {
+                    clearProgress();
+                    // 仅清除选择，不重新加载题目
+                    const inputs = document.querySelectorAll('input[type="radio"]');
+                    inputs.forEach(input => input.checked = false);
+                }
+            });
+
+            // 保存进度
+            function saveProgress() {
+                const answers = getSelectedAnswers();
+                localStorage.setItem(currentCategory, JSON.stringify({
+                    answers,
+                    timestamp: new Date().getTime()
+                }));
+            }
+
+            // 加载进度
+            function loadProgress() {
+                const progress = JSON.parse(localStorage.getItem(currentCategory));
+                if (progress) {
+                    progress.answers.forEach((answer, index) => {
+                        if (answer) {
+                            const selector = `input[name="q${index}"][value="${answer}"]`;
+                            const input = document.querySelector(selector);
+                            if (input) {
+                                input.checked = true;
+                            }
+                        }
+                    });
+                }
+            }
+
+            // 清除进度
+            function clearProgress() {
+                localStorage.removeItem(currentCategory);
+            }
+
+            // 获取分类名称
+            function getCategoryName(category) {
+                const names = {
+                    dataType: '数据类型',
+                    operator: '运算符',
+                    inputOutput: '输入输出',
+                    comprehensive: '综合'
+                };
+                return names[category];
+            }
+
+            // 修改选项点击事件以保存进度
+            document.addEventListener('change', (e) => {
+                if (e.target.matches('input[type="radio"]')) {
+                    saveProgress();
+                }
+            });
+
+            // 修改返回按钮点击事件
+            backBtn.addEventListener('click', () => {
+                quizPage.style.display = 'none';
+                initPage.style.display = 'flex';
+                questionArea.innerHTML = '';
+                // 重置重新作答按钮状态
+                document.getElementById('resetBtn').style.display = 'inline-block';
+                submitBtn.disabled = false;
+            });
+
+            // 导航按钮点击事件
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentCategory = btn.dataset.category;
+                    loadQuestions(currentCategory);
+                    navButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                });
+            });
+
+            // 提交按钮点击事件
+            submitBtn.addEventListener('click', () => {
+                if (confirm('确定要提交答案吗？')) {
+                    const userAnswers = getSelectedAnswers();
+                    const { score, totalScore, wrongAnswers } = calculateScore(userAnswers);
+                    showResult(score, totalScore, wrongAnswers);
+                    // 隐藏重新作答按钮
+                    document.getElementById('resetBtn').style.display = 'none';
+                    submitBtn.disabled = true;
+                }
+            });
+
+            function loadQuestions(category) {
+                currentQuestions = getRandomQuestions(category);
+                questionArea.innerHTML = currentQuestions
+                    .map((q, index) => `
+            <div class="question-item">
+              <p>${index + 1}. ${q.question}</p>
+              <div class="options">
+                ${q.options.map(opt => `
+                  <label>
+                    <input type="radio" name="q${index}" value="${opt[0]}">
+                    ${opt}
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+          `).join('');
+                submitBtn.disabled = false;
+            }
+
+            function getRandomQuestions(category, count = 5) {
+                let questions;
+                if (category === 'comprehensive') {
+                    questions = getAllQuestions();
+                    count = 10;
+                } else {
+                    questions = [...questionBank[category]];
+                }
+                const shuffled = questions.sort(() => 0.5 - Math.random());
+                return shuffled.slice(0, count);
+            }
+
+            function getAllQuestions() {
+                return [
+                    ...questionBank.dataType,
+                    ...questionBank.operator,
+                    ...questionBank.inputOutput
+                ];
+            }
+
+            function getSelectedAnswers() {
+                return currentQuestions.map((_, index) => {
+                    const selected = document.querySelector(`input[name="q${index}"]:checked`);
+                    return selected ? selected.value : null;
+                });
+            }
+
+            function calculateScore(userAnswers) {
+                const scorePerQuestion = currentCategory === 'comprehensive' ? 10 : 20;
+                const totalScore = currentQuestions.length * scorePerQuestion;
+                let score = 0;
+                const wrongAnswers = [];
+
+                userAnswers.forEach((answer, index) => {
+                    if (answer === currentQuestions[index].answer) {
+                        score += scorePerQuestion;
+                    } else {
+                        wrongAnswers.push({
+                            question: currentQuestions[index].question,
+                            options: currentQuestions[index].options,
+                            correctAnswer: currentQuestions[index].answer,
+                            userAnswer: answer
+                        });
+                    }
+                });
+
+                return { score, totalScore, wrongAnswers };
+            }
+
+            function showResult(score, totalScore, wrongAnswers) {
+                const resultContainer = document.createElement('div');
+                resultContainer.className = 'result-container';
+
+                const scoreDisplay = document.createElement('div');
+                scoreDisplay.className = 'score-display';
+                scoreDisplay.textContent = `得分：${score}/${totalScore}`;
+
+                if (score === totalScore) {
+                    scoreDisplay.style.color = 'green';
+                    scoreDisplay.innerHTML += ' 🎉 太棒了！全部答对！';
+                } else {
+                    scoreDisplay.style.color = 'red';
+                    scoreDisplay.innerHTML += ' 😢 再仔细点要不？！';
+                }
+
+                resultContainer.appendChild(scoreDisplay);
+
+                if (wrongAnswers.length > 0) {
+                    const wrongAnswersContainer = document.createElement('div');
+                    wrongAnswersContainer.className = 'wrong-answers';
+                    wrongAnswersContainer.innerHTML = '<h3>错题解析：</h3>';
+
+                    wrongAnswers.forEach((wrong, index) => {
+                        const wrongItem = document.createElement('div');
+                        wrongItem.className = 'wrong-item';
+
+                        wrongItem.innerHTML = `
+              <p><strong>第${index + 1}题：</strong>${wrong.question}</p>
+              <div class="options-display">
+            `;
+
+                        wrong.options.forEach(option => {
+                            const isCorrect = option[0] === wrong.correctAnswer;
+                            const isUserChoice = option[0] === wrong.userAnswer;
+                            let optionClass = '';
+                            if (isCorrect) {
+                                optionClass = 'correct-option';
+                            } else if (isUserChoice) {
+                                optionClass = 'wrong-option';
+                            }
+
+                            wrongItem.innerHTML += `
+                <div class="option ${optionClass}">
+                  ${option}
+                </div>
+              `;
+                        });
+
+                        wrongItem.innerHTML += '</div>';
+                        wrongAnswersContainer.appendChild(wrongItem);
+                    });
+
+                    resultContainer.appendChild(wrongAnswersContainer);
+                }
+      // 添加返回答题页面按钮
+      const resultBackBtn = document.createElement('button');
+      resultBackBtn.className = 'result-back-btn';
+      resultBackBtn.textContent = '返回答题';
+      resultBackBtn.addEventListener('click', () => {
+        // 清除结果页面
+        questionArea.innerHTML = '';
+        // 重新加载题目并恢复进度
+        loadQuestions(currentCategory);
+        loadProgress();
+        // 恢复按钮组显示
+        document.querySelector('.button-group').style.display = 'flex';
+        // 恢复重新作答按钮
+        document.getElementById('resetBtn').style.display = 'inline-block';
+        // 启用提交按钮
+        submitBtn.disabled = false;
+      });
+
+      resultContainer.appendChild(resultBackBtn);
+
+      questionArea.innerHTML = '';
+      questionArea.appendChild(resultContainer);
+
+      // 隐藏原有按钮组
+      document.querySelector('.button-group').style.display = 'none';
+    }
+      // 修改返回按钮功能
+    backBtn.addEventListener('click', () => {
+      // 如果是结果页面，返回答题页面
+      if (document.querySelector('.result-container')) {
+        // 清除结果页面
+        questionArea.innerHTML = '';
+        // 重新加载题目并恢复进度
+        loadQuestions(currentCategory);
+        loadProgress();
+        // 恢复按钮组显示
+        document.querySelector('.button-group').style.display = 'flex';
+        // 恢复重新作答按钮
+        document.getElementById('resetBtn').style.display = 'inline-block';
+        // 启用提交按钮
+        submitBtn.disabled = false;
+      } else {
+        // 如果是答题页面，返回首页
+        quizPage.style.display = 'none';
+        initPage.style.display = 'flex';
+        questionArea.innerHTML = '';
+        document.getElementById('resetBtn').style.display = 'inline-block';
+        submitBtn.disabled = false;
+      }
+    });
+ });
+ // 修改loadQuestions函数
+ function loadQuestions(category) {
+      currentQuestions = getRandomQuestions(category);
+      questionArea.innerHTML = currentQuestions
+        .map((q, index) => `
+          <div class="question-item">
+            <p>${index + 1}. ${q.question}</p>
+            <div class="options">
+              ${q.options.map(opt => `
+                <label>
+                  <input type="radio" name="q${index}" value="${opt[0]}">
+                  ${opt}
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `).join('');
+      submitBtn.disabled = false;
+      // 加载后立即恢复进度
+      loadProgress();
+    }
+    </script>
+</body>
+
+</html>
